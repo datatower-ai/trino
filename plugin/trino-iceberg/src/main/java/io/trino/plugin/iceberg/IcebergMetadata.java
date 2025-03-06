@@ -2714,7 +2714,7 @@ public class IcebergMetadata
         Type newType = toIcebergTypeForNewColumn(type, nextFieldId);
         try {
             UpdateSchema schemaUpdate = icebergTable.updateSchema();
-            buildUpdateSchema(column.getName(), sourceType, newType, schemaUpdate);
+            buildUpdateSchema(column.getName(), sourceType, newType, schemaUpdate, icebergTable.schema());
             schemaUpdate.commit();
         }
         catch (RuntimeException e) {
@@ -2722,7 +2722,7 @@ public class IcebergMetadata
         }
     }
 
-    private static void buildUpdateSchema(String name, Type sourceType, Type newType, UpdateSchema schemaUpdate)
+    private static void buildUpdateSchema(String name, Type sourceType, Type newType, UpdateSchema schemaUpdate, Schema schema)
     {
         if (sourceType.equals(newType)) {
             return;
@@ -2731,39 +2731,82 @@ public class IcebergMetadata
             schemaUpdate.updateColumn(name, newType.asPrimitiveType());
             return;
         }
+        //List type comparison needs to determine whether the element type is consistent
+        if (sourceType.isListType() && newType.isListType()) {
+            Types.ListType sourceListType = sourceType.asListType();
+            Types.ListType newListType = newType.asListType();
+            if (sourceListType.elementType().equals(newListType.elementType())) {
+                return;
+            }
+            else if (sourceType.asListType().elementType() instanceof StructType sourceRowType && newType.asListType().elementType() instanceof StructType newRowType) {
+                // Add, update or delete fields
+                updateStructType(name, schemaUpdate, schema, sourceRowType, newRowType);
+                return;
+            }
+        }
         if (sourceType instanceof StructType sourceRowType && newType instanceof StructType newRowType) {
             // Add, update or delete fields
-            List<NestedField> fields = Streams.concat(sourceRowType.fields().stream(), newRowType.fields().stream())
-                    .distinct()
-                    .collect(toImmutableList());
-            for (NestedField field : fields) {
-                if (fieldExists(sourceRowType, field.name()) && fieldExists(newRowType, field.name())) {
-                    buildUpdateSchema(name + "." + field.name(), sourceRowType.fieldType(field.name()), newRowType.fieldType(field.name()), schemaUpdate);
-                }
-                else if (fieldExists(newRowType, field.name())) {
-                    schemaUpdate.addColumn(name, field.name(), field.type());
-                }
-                else {
-                    schemaUpdate.deleteColumn(name + "." + field.name());
-                }
-            }
-
-            // Order fields based on the new column type
-            String currentName = null;
-            for (NestedField field : newRowType.fields()) {
-                String path = name + "." + field.name();
-                if (currentName == null) {
-                    schemaUpdate.moveFirst(path);
-                }
-                else {
-                    schemaUpdate.moveAfter(path, currentName);
-                }
-                currentName = path;
-            }
-
+            updateStructType(name, schemaUpdate, schema, sourceRowType, newRowType);
             return;
         }
+
         throw new IllegalArgumentException("Cannot change type from %s to %s".formatted(sourceType, newType));
+    }
+
+    private static void updateStructType(String name, UpdateSchema schemaUpdate, Schema schema, StructType sourceRowType, StructType newRowType)
+    {
+        // Add, update or delete fields
+        List<NestedField> fields = Streams.concat(sourceRowType.fields().stream(), newRowType.fields().stream())
+                .distinct()
+                .collect(toImmutableList());
+        for (NestedField field : fields) {
+            if (fieldExists(sourceRowType, field.name()) && fieldExists(newRowType, field.name())) {
+                buildUpdateSchema(getFullName(name, field.name(), schema), sourceRowType.fieldType(field.name()), newRowType.fieldType(field.name()), schemaUpdate, schema);
+            }
+            else if (fieldExists(newRowType, field.name())) {
+                schemaUpdate.addColumn(name, field.name(), field.type());
+            }
+            else {
+                schemaUpdate.deleteColumn(getFullName(name, field.name(), schema));
+            }
+        }
+
+        // Order fields based on the new column type
+        String currentName = null;
+        for (NestedField field : newRowType.fields()) {
+            String path = getFullName(name, field.name(), schema);
+            if (currentName == null) {
+                schemaUpdate.moveFirst(path);
+            }
+            else {
+                schemaUpdate.moveAfter(path, currentName);
+            }
+            currentName = path;
+        }
+    }
+
+    private static String getFullName(String parent, String fieldName, Schema schema)
+    {
+        String fullName;
+        if (parent != null) {
+            NestedField parentField = schema.findField(parent);
+            Type parentType = parentField.type();
+            if (parentType.isNestedType()) {
+                Type.NestedType nested = parentType.asNestedType();
+                if (nested.isMapType()) {
+                    parentField = nested.asMapType().fields().get(1);
+                }
+                else if (nested.isListType()) {
+                    parentField = nested.asListType().fields().get(0);
+                }
+            }
+            int parentId = parentField.fieldId();
+            fullName = schema.findColumnName(parentId) + "." + fieldName;
+        }
+        else {
+            fullName = fieldName;
+        }
+        return fullName;
     }
 
     private static boolean fieldExists(StructType structType, String fieldName)
