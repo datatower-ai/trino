@@ -29,6 +29,10 @@ public class KuduScannerAliveKeeper
     private static final Logger logger = Logger.get(KuduScannerAliveKeeper.class);
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2, threadsNamed("kudu-scanner-keepalive-%s"));
 
+    private KuduScannerAliveKeeper()
+    {
+    }
+
     public static void add(KuduScanner scanner, Duration keepaliveInterval)
     {
         final long keepaliveIntervalMillis = keepaliveInterval.toMillis();

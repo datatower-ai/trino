@@ -94,7 +94,6 @@ public class KuduClientSession
     private final boolean allowLocalScheduling;
     private final KuduScannerConfig scannerConfig;
 
-
     public KuduClientSession(KuduClientWrapper client, SchemaEmulation schemaEmulation, KuduScannerConfig scannerConfig, boolean allowLocalScheduling)
     {
         this.client = client;
