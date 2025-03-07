@@ -61,58 +61,39 @@
         <module>lib/trino-record-decoder</module>
         <module>plugin/trino-ai-functions</module>
         <module>plugin/trino-base-jdbc</module>
-        <module>plugin/trino-bigquery</module>
         <module>plugin/trino-blackhole</module>
-        <module>plugin/trino-cassandra</module>
-        <module>plugin/trino-clickhouse</module>
-        <module>plugin/trino-delta-lake</module>
-        <module>plugin/trino-druid</module>
-        <module>plugin/trino-duckdb</module>
-        <module>plugin/trino-elasticsearch</module>
+        <module>plugin/trino-datatower-functions</module>
         <module>plugin/trino-example-http</module>
         <module>plugin/trino-example-jdbc</module>
-        <module>plugin/trino-exasol</module>
         <module>plugin/trino-exchange-filesystem</module>
         <module>plugin/trino-exchange-hdfs</module>
         <module>plugin/trino-faker</module>
         <module>plugin/trino-functions-python</module>
         <module>plugin/trino-geospatial</module>
-        <module>plugin/trino-google-sheets</module>
         <module>plugin/trino-hive</module>
         <module>plugin/trino-http-event-listener</module>
         <module>plugin/trino-http-server-event-listener</module>
         <module>plugin/trino-hudi</module>
         <module>plugin/trino-iceberg</module>
-        <module>plugin/trino-ignite</module>
         <module>plugin/trino-jmx</module>
         <module>plugin/trino-kafka</module>
         <module>plugin/trino-kafka-event-listener</module>
         <module>plugin/trino-kudu</module>
         <module>plugin/trino-loki</module>
-        <module>plugin/trino-mariadb</module>
         <module>plugin/trino-memory</module>
         <module>plugin/trino-ml</module>
-        <module>plugin/trino-mongodb</module>
         <module>plugin/trino-mysql</module>
         <module>plugin/trino-mysql-event-listener</module>
         <module>plugin/trino-opa</module>
         <module>plugin/trino-openlineage</module>
-        <module>plugin/trino-opensearch</module>
-        <module>plugin/trino-oracle</module>
         <module>plugin/trino-password-authenticators</module>
-        <module>plugin/trino-phoenix5</module>
-        <module>plugin/trino-pinot</module>
         <module>plugin/trino-postgresql</module>
         <module>plugin/trino-prometheus</module>
         <module>plugin/trino-ranger</module>
         <module>plugin/trino-redis</module>
-        <module>plugin/trino-redshift</module>
         <module>plugin/trino-resource-group-managers</module>
         <module>plugin/trino-session-property-managers</module>
-        <module>plugin/trino-singlestore</module>
-        <module>plugin/trino-snowflake</module>
         <module>plugin/trino-spooling-filesystem</module>
-        <module>plugin/trino-sqlserver</module>
         <module>plugin/trino-teradata-functions</module>
         <module>plugin/trino-thrift</module>
         <module>plugin/trino-thrift-api</module>
@@ -162,7 +143,8 @@
         <air.modernizer.java-version>8</air.modernizer.java-version>
         <air.release.preparation-goals>clean verify -DskipTests</air.release.preparation-goals>
         <!--
-          America/Bahia_Banderas has:
+          Ameriskip-extended>true</air.check.skip-extended>
+        <air.check.ca/Bahia_Banderas has:
            - DST (e.g. at 2017-04-02 02:00:00 clocks turned forward 1 hour; 2017-10-29 02:00:00 clocks turned backward 1 hour)
           -->
         <air.test.timezone>America/Bahia_Banderas</air.test.timezone>

@@ -12,6 +12,10 @@
     <artifactId>trino-plugin-toolkit</artifactId>
     <description>Trino - Plugin Toolkit</description>
 
+    <properties>
+        <dep.nashorn.version>15.6</dep.nashorn.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -144,6 +148,13 @@
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>node</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>${dep.nashorn.version}</version>
             <scope>runtime</scope>
         </dependency>
 
