@@ -46,6 +46,12 @@
         </artifact>
     </artifactSet>
 
+    <artifactSet to="plugin/datatower-functions">
+        <artifact id="${project.groupId}:trino-datatower-functions:zip:${project.version}">
+            <unpack />
+        </artifact>
+    </artifactSet>
+
     <artifactSet to="plugin/delta-lake">
         <artifact id="${project.groupId}:trino-delta-lake:zip:${project.version}">
             <unpack />

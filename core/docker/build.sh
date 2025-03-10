@@ -108,6 +108,49 @@ WORK_DIR="$(mktemp -d)"
 cp "$trino_server" "${WORK_DIR}/"
 cp "$trino_client" "${WORK_DIR}/"
 tar -C "${WORK_DIR}" -xzf "${WORK_DIR}/trino-server-${TRINO_VERSION}.tar.gz"
+
+# 将 juicefs-hadoop 包拷贝到每个 hdfs 目录下
+JUICEFS_JAR_URL="https://github.com/juicedata/juicefs/releases/download/v1.2.3/juicefs-hadoop-1.2.3.jar"
+JUICEFS_JAR_NAME="juicefs-hadoop-1.2.3.jar"
+# 1. 下载 juicefs-hadoop-1.2.3.jar 到 ${WORK_DIR}
+echo "Downloading ${JUICEFS_JAR_NAME}..."
+wget -q -O "${WORK_DIR}/${JUICEFS_JAR_NAME}" "${JUICEFS_JAR_URL}"
+if [ $? -ne 0 ]; then
+    echo "Failed to download ${JUICEFS_JAR_NAME}"
+    exit 1
+fi
+echo "Download completed: ${WORK_DIR}/${JUICEFS_JAR_NAME}"
+
+# 2. 查找所有名为 hdfs 的目录
+echo "Searching for hdfs directories in ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin..."
+HDFS_DIRS=$(find "${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin" -type d -name "hdfs")
+if [ -z "$HDFS_DIRS" ]; then
+    echo "No hdfs directories found."
+    exit 1
+fi
+echo "Found hdfs directories:"
+echo "$HDFS_DIRS"
+
+# 3. 将 juicefs-hadoop-1.2.3.jar 拷贝到每一个 hdfs 目录
+for DIR in $HDFS_DIRS; do
+    echo "Copying ${JUICEFS_JAR_NAME} to ${DIR}..."
+    cp "${WORK_DIR}/${JUICEFS_JAR_NAME}" "${DIR}/"
+    if [ $? -ne 0 ]; then
+        echo "Failed to copy ${JUICEFS_JAR_NAME} to ${DIR}"
+        exit 1
+    fi
+    echo "Copied successfully."
+done
+
+# 4. 删除临时的 juicefs-hadoop-1.2.3.jar 文件
+echo "Deleting temporary ${JUICEFS_JAR_NAME}..."
+rm -f "${WORK_DIR}/${JUICEFS_JAR_NAME}"
+if [ $? -ne 0 ]; then
+    echo "Failed to delete ${JUICEFS_JAR_NAME}"
+    exit 1
+fi
+# 将 juicefs-hadoop 包拷贝到每个 hdfs 目录下 -- 完成
+
 rm "${WORK_DIR}/trino-server-${TRINO_VERSION}.tar.gz"
 cp -R bin "${WORK_DIR}/trino-server-${TRINO_VERSION}"
 cp -R default "${WORK_DIR}/"
@@ -143,4 +186,3 @@ else
       docker image inspect -f '🚀 Built {{.RepoTags}} {{.Id}}' "${TAG_PREFIX}-$arch"
   done
 fi
-
